@@ -73,6 +73,19 @@ def apply_scaler(scaler: StandardScaler, X: np.ndarray) -> np.ndarray:
     return scaler.transform(X).astype(np.float32)
 
 
+def crop_to_len(X: np.ndarray, n: int) -> np.ndarray:
+    """Center-crop traces to length `n`. Variable-key ASCAD uses 1400-sample traces
+    while fixed-key uses 700; calling this before scaling lets a 700-input model
+    consume both."""
+    cur = X.shape[1]
+    if cur == n:
+        return X
+    if cur < n:
+        raise ValueError(f"trace length {cur} is shorter than required {n}; cannot crop")
+    start = (cur - n) // 2
+    return X[:, start:start + n]
+
+
 def augment_shift(X: np.ndarray, max_shift: int, rng: np.random.Generator | None = None) -> np.ndarray:
     """Random circular time-shift per trace; mimics jitter for training-time augmentation."""
     if max_shift <= 0:
